@@ -1,0 +1,11 @@
+[project]
+name = "geocoding_api"
+version = "0.1.0"
+description = "A FastAPI-based geocoding API that integrates multiple reverse geocoding services, allowing flexible and dynamic location lookup using external providers like Geoapify, HERE, and Nominatim."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.115.12",
+    "requests>=2.32.3",
+    "uvicorn>=0.34.2",
+]
