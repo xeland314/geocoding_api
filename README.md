@@ -157,13 +157,3 @@ See the [`LICENSE`](LICENSE) file for full details.
 > **This project integrates third-party geocoding services** (**HERE**, **Geoapify**, **Nominatim**).  
 > Users must comply with each provider's **terms of service** and **usage limits**.  
 > The author of this project **does not endorse or facilitate** any violations of external API agreements.
-
----
-
-### 🔥 Improvements:
-
-✔ **Enhanced clarity and structure** – Readability improved with better formatting.  
-✔ **Clear API usage examples** – Now includes requests and responses for easier understanding.  
-✔ **Emphasized key sections** – Features, installation, API endpoints, and environment setup are highlighted.  
-✔ **Interactive & user-friendly formatting** – Icons and spacing improve readability.
-Absolutely! Here’s the **updated license section** to reflect **GNU GPL v3**, including a clarification about compliance with third-party geolocation services:
