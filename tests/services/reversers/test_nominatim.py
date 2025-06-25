@@ -1,8 +1,8 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+import pytest
 from src.models import Coordinates, Success, Failure
 from src.services.reversers.nominatim import NominatimReverseGeocoder
-
+from src.services.cache import CacheManager
 
 @pytest.mark.asyncio
 async def test_nominatim_reverse_geocoder_success():
@@ -25,7 +25,7 @@ async def test_nominatim_reverse_geocoder_success():
         },
     }
 
-    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0")
+    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0", cache=CacheManager())
     coordinates = Coordinates(latitude=40.7128, longitude=-74.0060)
 
     # Act
@@ -39,7 +39,7 @@ async def test_nominatim_reverse_geocoder_success():
     assert result.is_success()
     addresses = result.unwrap()
     assert len(addresses) == 1
-    assert addresses[0].city == "New York"
+    assert addresses[0].settlement == "New York"
     assert addresses[0].country == "United States"
 
 
@@ -47,7 +47,7 @@ async def test_nominatim_reverse_geocoder_success():
 async def test_nominatim_reverse_geocoder_failure():
     """Test failed reverse geocoding with Nominatim."""
     # Arrange
-    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0")
+    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0", cache=CacheManager())
     coordinates = Coordinates(latitude=0, longitude=0)
 
     # Act
@@ -66,7 +66,7 @@ async def test_nominatim_reverse_geocoder_failure():
 async def test_nominatim_reverse_geocoder_empty_response():
     """Test reverse geocoding with an empty response from Nominatim."""
     # Arrange
-    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0")
+    geocoder = NominatimReverseGeocoder(user_agent="TestApp/1.0", cache=CacheManager())
     coordinates = Coordinates(latitude=0, longitude=0)
 
     # Act

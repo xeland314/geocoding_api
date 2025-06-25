@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "httpx>=0.28.1",
     "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
     "redis>=6.2.0",
     "uvicorn>=0.34.2",
 ]
