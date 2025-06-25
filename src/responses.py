@@ -2,6 +2,7 @@ from typing import List, Union
 from pydantic import BaseModel
 
 from src.models.address import Address
+from src.models.coordinates import Coordinates
 
 
 class ReverseGeocodeResponse(BaseModel):
@@ -9,6 +10,14 @@ class ReverseGeocodeResponse(BaseModel):
 
     success: bool
     data: Union[List[Address], None] = None
+    error: Union[str, None] = None
+
+
+class GeocodeResponse(BaseModel):
+    """Model to represent the response of a geocoding request."""
+
+    success: bool
+    data: Union[List[Coordinates], None] = None
     error: Union[str, None] = None
 
 

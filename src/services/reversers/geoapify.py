@@ -39,7 +39,7 @@ class GeoapifyReverseGeocoder(ReverseGeocoderBase):
             "apiKey": self.api_key,
             "type": "building",  # Mejorar precisión
         }
-        result: Result = self._make_request(self.url, params)
+        result: Result = await self._make_request(self.url, params)
         if result.is_failure():
             return result
 

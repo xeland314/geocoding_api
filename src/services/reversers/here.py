@@ -40,7 +40,7 @@ class HereReverseGeocoder(ReverseGeocoderBase):
         }
 
         # Realizar la solicitud HTTP
-        result = self._make_request(self.url, params)
+        result = await self._make_request(self.url, params)
         if result.is_failure():
             return result
 

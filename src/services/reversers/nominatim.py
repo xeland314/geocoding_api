@@ -41,7 +41,7 @@ class NominatimReverseGeocoder(ReverseGeocoderBase):
             "addressdetails": 1,
         }
 
-        result = self._make_request(self.url, params, user_agent=self.user_agent)
+        result = await self._make_request(self.url, params, user_agent=self.user_agent)
         if result.is_failure():
             return result
 

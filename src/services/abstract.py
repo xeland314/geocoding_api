@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
-import requests
+import httpx
 
 from src.models import Result, Address, Coordinates
 from src.models.failure import Failure
@@ -28,7 +28,7 @@ class ServiceCommandBase(ABC):
         except (RuntimeError, ValueError) as e:  # Specific exceptions can be expanded.
             print(f"Error executing {self.name}: {e}")
 
-    def _make_request(
+    async def _make_request(
         self,
         url: str,
         params: Dict[str, Any],
@@ -42,19 +42,21 @@ class ServiceCommandBase(ABC):
             if user_agent:
                 headers = {"User-Agent": user_agent}
 
-            response = requests.get(
-                url, params=params, timeout=timeout, headers=headers
-            )
-            response.raise_for_status()
-            return Success(response.json())
-        except requests.Timeout:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    url, params=params, timeout=timeout, headers=headers
+                )
+                response.raise_for_status()
+                return Success(response.json())
+        except httpx.TimeoutException:
             return Failure("Request timeout.")
-        except requests.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
                 return Failure("API rate limit exceeded.")
             return Failure(f"HTTP error: {e.response.text}")
-        except requests.RequestException as e:
-            return Failure(f"Request failed: {e}")
+        except httpx.RequestError as e:
+            return Failure(f"Request failed: {e}")        
+        return Failure("An unexpected error occurred while making the request.")
 
     def __str__(self) -> str:
         """Returns a string representation of the service command."""

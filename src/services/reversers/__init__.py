@@ -36,26 +36,32 @@ class GeocoderReverser:
         self, coordinates: Coordinates, platform: Optional[str] = None
     ) -> ReverseGeocodeResponse:
         """
-        Performs reverse geocoding using the specified geocoder.
+        Performs reverse geocoding using a specified geocoder or tries all
+        available geocoders until one succeeds.
         """
-        if not platform:
-            # Use the first registered platform by default
-            geocoder = next(iter(self.geocoders.values()), None)
-            if not geocoder:
-                return ReverseGeocodeResponse(
-                    success=False, error="No geocoder is configured."
-                )
-        else:
-            # Search for the geocoder by name in the dictionary
+        if platform:
             geocoder = self.geocoders.get(platform.upper())
             if not geocoder:
                 return ReverseGeocodeResponse(
-                    success=False,
-                    error="Invalid platform specified.",
+                    success=False, error="Invalid platform specified."
                 )
 
-        # Execute reverse geocoding
-        result = await geocoder.get_addresses(coordinates)
-        if result.is_success():
-            return ReverseGeocodeResponse(success=True, data=result.unwrap())
-        return ReverseGeocodeResponse(success=False, error=result.unwrap_err())
+            result = await geocoder.get_addresses(coordinates)
+            if result.is_success():
+                return ReverseGeocodeResponse(success=True, data=result.unwrap())
+            return ReverseGeocodeResponse(success=False, error=result.unwrap_err())
+
+        # If no platform is specified, try all available geocoders
+        if not self.geocoders:
+            return ReverseGeocodeResponse(
+                success=False, error="No geocoders are configured."
+            )
+
+        for geocoder_name, geocoder in self.geocoders.items():
+            result = await geocoder.get_addresses(coordinates)
+            if result.is_success():
+                return ReverseGeocodeResponse(success=True, data=result.unwrap())
+
+        return ReverseGeocodeResponse(
+            success=False, error="All geocoding services failed."
+        )
