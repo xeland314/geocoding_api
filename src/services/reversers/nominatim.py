@@ -1,5 +1,6 @@
 from src.models import Result, Success, Failure, Address, Coordinates
 from src.services.abstract import ReverseGeocoderBase
+from src.services.cache import CacheManager
 
 
 class NominatimReverseGeocoder(ReverseGeocoderBase):
@@ -9,11 +10,13 @@ class NominatimReverseGeocoder(ReverseGeocoderBase):
 
     def __init__(
         self,
+        *,
+        cache: CacheManager,
         url: str = "https://nominatim.openstreetmap.org/reverse",
-        /,
         user_agent: str = "MyGeocoderApp/1.0 (email@example.com)",
     ):
         """Initializes the Nominatim Reverse Geocoder with User Agent header"""
+        self.cache = cache
         self.url = url
         self.user_agent = user_agent
 

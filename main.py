@@ -2,15 +2,19 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from src.models import Coordinates
 from src.responses import GeocodeResponse, ReverseGeocodeResponse, GeocodersResponse
+from src.services.cache import CacheManager
 from src.services.geocoders import Geocoder
 from src.services.reversers import GeocoderReverser
 
-# FastAPI instance
-app = FastAPI()
+# Cache and geocoder manager instances
+cache_manager = CacheManager()
+
+# FastAPI instance with lifespan management
+app = FastAPI(lifespan=cache_manager.lifespan)
 
 # Dynamic geocoder managers
-geocoder = Geocoder()
-geocoder_reverser = GeocoderReverser()
+geocoder = Geocoder(cache=cache_manager)
+geocoder_reverser = GeocoderReverser(cache=cache_manager)
 
 
 @app.get("/geocode", response_model=GeocodeResponse)
@@ -48,16 +52,31 @@ def get_geocoders():
     """
     Returns the list of configured geocoders.
     """
-    all_geocoders = {
-        **geocoder_reverser.geocoders,
-        **geocoder.geocoders,
-    }
-    if not all_geocoders:
+    if not geocoder.geocoders:
         raise HTTPException(status_code=404, detail="No geocoders are configured.")
+
+    print(f"Available geocoders: {list(geocoder.geocoders)}")
+    return GeocodersResponse(
+        geocoders=[
+            {"name": name, "url": geocoder.url}
+            for name, geocoder in geocoder.geocoders.items()
+        ]
+    )
+
+
+@app.get("/reversers", response_model=GeocodersResponse)
+def get_reversers():
+    """
+    Returns the list of configured reverse geocoders.
+    """
+    if not geocoder_reverser.geocoders:
+        raise HTTPException(
+            status_code=404, detail="No reverse geocoders are configured."
+        )
 
     return GeocodersResponse(
         geocoders=[
             {"name": name, "url": geocoder.url}
-            for name, geocoder in all_geocoders.items()
+            for name, geocoder in geocoder_reverser.geocoders.items()
         ]
     )

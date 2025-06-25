@@ -1,5 +1,6 @@
 from src.models import Result, Success, Failure, Coordinates
 from src.services.abstract import GeocoderBase
+from src.services.cache import CacheManager
 
 
 class NominatimGeocoder(GeocoderBase):
@@ -9,11 +10,13 @@ class NominatimGeocoder(GeocoderBase):
 
     def __init__(
         self,
+        *,
+        cache: CacheManager,
         url: str = "https://nominatim.openstreetmap.org/search",
-        /,
         user_agent: str = "MyGeocoderApp/1.0 (email@example.com)",
     ):
         """Initializes the Nominatim Geocoder with User Agent header"""
+        self.cache = cache
         self.url = url
         self.user_agent = user_agent
 

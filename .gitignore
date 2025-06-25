@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 scripts/set_env_production.sh
+geocoding_cache.db

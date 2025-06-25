@@ -1,5 +1,6 @@
 from src.models import Result, Success, Failure, Address, Coordinates
 from src.services.abstract import ReverseGeocoderBase
+from src.services.cache import CacheManager
 
 
 class GeoapifyReverseGeocoder(ReverseGeocoderBase):
@@ -9,12 +10,14 @@ class GeoapifyReverseGeocoder(ReverseGeocoderBase):
     url: str = "https://api.geoapify.com/v1/geocode/reverse"
     api_key: str
 
-    def __init__(self, api_key: str):
+    def __init__(self, cache: CacheManager, api_key: str):
         """Initializes the Geoapify Reverse Geocoder with API key
 
         Args:
+            cache (CacheManager): The cache manager instance.
             api_key (str): Geoapify API key.
         """
+        self.cache = cache
         self.api_key = api_key
 
     def execute(self):

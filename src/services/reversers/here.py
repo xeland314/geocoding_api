@@ -1,5 +1,6 @@
 from src.models import Result, Success, Failure, Address, Coordinates
 from src.services.abstract import ReverseGeocoderBase
+from src.services.cache import CacheManager
 
 
 class HereReverseGeocoder(ReverseGeocoderBase):
@@ -9,12 +10,14 @@ class HereReverseGeocoder(ReverseGeocoderBase):
     url: str = "https://revgeocode.search.hereapi.com/v1/revgeocode"
     api_key: str
 
-    def __init__(self, api_key: str):
+    def __init__(self, cache: CacheManager, api_key: str):
         """Initializes the HERE Reverse Geocoder with the API key.
 
         Args:
+            cache (CacheManager): The cache manager instance.
             api_key (str): HERE.com API key.
         """
+        self.cache = cache
         self.api_key = api_key
 
     def execute(self):

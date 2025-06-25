@@ -1,32 +1,32 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 import httpx
+import hashlib
+import json
 
 from src.models import Result, Address, Coordinates
 from src.models.failure import Failure
 from src.models.success import Success
+from src.services.cache import CacheManager
 
 
 class ServiceCommandBase(ABC):
-    """Abstract base class for service commands.
-
-    Attributes:
-        name (str): Name of the service command.
-    """
+    """Abstract base class for service commands."""
 
     name: str
     url: str
+    cache: CacheManager
 
     @abstractmethod
     def execute(self) -> None:
         """Executes the command. Must be implemented by subclasses."""
 
-    def safe_execute(self) -> None:
-        """Safely executes the command, handling common exceptions."""
-        try:
-            self.execute()
-        except (RuntimeError, ValueError) as e:  # Specific exceptions can be expanded.
-            print(f"Error executing {self.name}: {e}")
+    def _generate_cache_key(self, params: Dict[str, Any]) -> str:
+        """Generates a consistent cache key for a request."""
+        # Use a hash of the sorted parameters to ensure consistency
+        param_string = json.dumps(params, sort_keys=True)
+        hash_object = hashlib.sha256(param_string.encode())
+        return f"raw:{self.name}:{hash_object.hexdigest()}"
 
     async def _make_request(
         self,
@@ -36,7 +36,15 @@ class ServiceCommandBase(ABC):
         /,
         user_agent: Optional[str] = None,
     ) -> Result[Dict[str, Any], str]:
-        """Make HTTP request to an URL with error handling."""
+        """Make HTTP request to an URL with error handling and caching."""
+        cache_key = self._generate_cache_key(params)
+        
+        # 1. Check cache first
+        cached_response = await self.cache.get_raw(cache_key)
+        if cached_response:
+            return Success(cached_response)
+
+        # 2. If not in cache, make the actual request
         try:
             headers = None
             if user_agent:
@@ -47,7 +55,12 @@ class ServiceCommandBase(ABC):
                     url, params=params, timeout=timeout, headers=headers
                 )
                 response.raise_for_status()
-                return Success(response.json())
+                response_data = response.json()
+
+                # 3. Store the successful response in cache
+                await self.cache.set_raw(cache_key, response_data)
+                
+                return Success(response_data)
         except httpx.TimeoutException:
             return Failure("Request timeout.")
         except httpx.HTTPStatusError as e:
