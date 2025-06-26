@@ -49,7 +49,7 @@ class NominatimReverseGeocoder(ReverseGeocoderBase):
             return result
 
         try:
-            data = result.unwrap()
+            data = await result.unwrap()
             items = data.get("address", None)
             if not items:
                 return Failure("No address found for the given coordinates.")
