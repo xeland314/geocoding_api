@@ -10,3 +10,4 @@ wheels/
 .venv
 scripts/set_env_production.sh
 geocoding_cache.db
+certs/

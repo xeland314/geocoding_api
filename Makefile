@@ -44,6 +44,13 @@ runserver: ## Starts the development server
 	@echo "Starting development server..."
 	$(PYTHON) -m uvicorn $(APP_MODULE):$(APP_NAME) --host $(HOST) --port $(PORT) $(RELOAD)
 
+.PHONY: run-https
+run-https: ## Starts the development server with HTTPS
+	@echo "Starting development server with HTTPS..."
+	$(PYTHON) -m uvicorn $(APP_MODULE):$(APP_NAME) --host $(HOST) --port $(PORT) $(RELOAD) \
+		--ssl-keyfile certs/geocodingapi.local-key.pem \
+		--ssl-certfile certs/geocodingapi.local.pem
+
 .PHONY: test
 test: ## Runs tests using unittest
 	@echo "Running tests with unittest..."
