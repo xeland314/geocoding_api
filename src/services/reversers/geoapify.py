@@ -57,15 +57,15 @@ class GeoapifyReverseGeocoder(ReverseGeocoderBase):
                 props: dict = feature.get("properties", {})
                 addresses.append(
                     Address(
-                        formatted_address=props.get("formatted"),
-                        postcode=props.get("postcode"),
-                        country=props.get("country"),
-                        state=props.get("state"),
-                        district=props.get("district"),
-                        settlement=props.get("city") or props.get("town"),
-                        suburb=props.get("suburb"),
-                        street=props.get("street"),
-                        house=props.get("name") or props.get("housenumber"),
+                        formatted_address=props.get("formatted") or "",
+                        postcode=props.get("postcode") or "",
+                        country=props.get("country") or "",
+                        state=props.get("state") or "",
+                        district=props.get("district") or "",
+                        settlement=props.get("city") or props.get("town") or "",
+                        suburb=props.get("suburb") or "",
+                        street=props.get("street") or "",
+                        house=props.get("name") or props.get("housenumber") or "",
                     )
                 )
             return Success(addresses)

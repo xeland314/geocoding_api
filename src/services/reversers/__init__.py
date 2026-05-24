@@ -1,10 +1,10 @@
-import os
 import hashlib
 from typing import Optional
 from src.models import Coordinates
 from src.responses import ReverseGeocodeResponse
 from src.services.abstract import ReverseGeocoderBase
 from src.services.cache import CacheManager
+from src.services.config import config
 from src.services.reversers.geoapify import GeoapifyReverseGeocoder
 from src.services.reversers.here import HereReverseGeocoder
 from src.services.reversers.nominatim import NominatimReverseGeocoder
@@ -14,30 +14,48 @@ class GeocoderReverser:
     """Class for managing dynamic configuration and geocoder search."""
 
     def __init__(self, cache: CacheManager):
-        """Initializes a dictionary of geocoders based on environment variables."""
+        """Initializes a dictionary of geocoders based on config.json."""
         self.cache = cache
-        self.geocoders: dict[str, ReverseGeocoderBase] = {
-            "GEOAPIFY": GeoapifyReverseGeocoder(
-                self.cache, api_key=os.getenv("GEOAPIFY_API_KEY")
-            ),
-            "HERE": HereReverseGeocoder(self.cache, api_key=os.getenv("HERE_API_KEY")),
-            "NOMINATIM": NominatimReverseGeocoder(
-                cache=self.cache,
-                user_agent=os.getenv("NOMINATIM_USER_AGENT"),
-            ),
-            "NOMINATIM_REPLICA_1": NominatimReverseGeocoder(
-                cache=self.cache,
-                url=os.getenv("NOMINATIM_REVERSER_REPLICA_URL_1"),
-                user_agent=os.getenv("NOMINATIM_USER_AGENT"),
-            ),
+        self.geocoders: dict[str, ReverseGeocoderBase] = {}
+        
+        reversers_config = config.get("reversers", {})
+        
+        # Mapping of config keys to Reverser classes
+        class_map = {
+            "GEOAPIFY": GeoapifyReverseGeocoder,
+            "HERE": HereReverseGeocoder,
+            "NOMINATIM": NominatimReverseGeocoder,
+            "NOMINATIM_REPLICA_1": NominatimReverseGeocoder,
         }
 
-        # Remove entries that are not correctly configured
-        self.geocoders = {
-            name: geocoder
-            for name, geocoder in self.geocoders.items()
-            if geocoder is not None
-        }
+        for name, settings in reversers_config.items():
+            if not settings.get("enabled", False):
+                continue
+            
+            reverser_class = class_map.get(name)
+            if not reverser_class:
+                print(f"[GeocoderReverser] Unknown reverser type: {name}")
+                continue
+                
+            # Initialize with settings from config
+            init_params = {
+                "cache": self.cache,
+            }
+            
+            # Add optional parameters based on class requirements
+            if "api_key" in settings and settings["api_key"]:
+                init_params["api_key"] = settings["api_key"]
+            if "url" in settings and settings["url"]:
+                init_params["url"] = settings["url"]
+            if "user_agent" in settings and settings["user_agent"]:
+                init_params["user_agent"] = settings["user_agent"]
+                
+            try:
+                self.geocoders[name] = reverser_class(**init_params)
+            except TypeError as e:
+                print(f"[GeocoderReverser] Error initializing {name}: {e}")
+
+        print(f"[GeocoderReverser] Active reversers: {list(self.geocoders.keys())}")
 
     def _generate_cache_key(
         self, coordinates: Coordinates, platform: Optional[str]
@@ -67,27 +85,27 @@ class GeocoderReverser:
             geocoder = self.geocoders.get(platform.upper())
             if not geocoder:
                 return ReverseGeocodeResponse(
-                    success=False, error="Invalid platform specified."
+                    success=False, error="Invalid platform specified or platform disabled."
                 )
 
             result = await geocoder.get_addresses(coordinates)
             if result.is_success():
                 response = ReverseGeocodeResponse(success=True, data=result.unwrap())
-                await self.cache.set_final(cache_key, response.data)
+                await self.cache.set_final(cache_key, response.data or [])
                 return response
             return ReverseGeocodeResponse(success=False, error=result.unwrap_err())
 
         # Failover logic
         if not self.geocoders:
             return ReverseGeocodeResponse(
-                success=False, error="No geocoders are configured."
+                success=False, error="No reversers are configured or enabled."
             )
 
         for geocoder_name, geocoder in self.geocoders.items():
             result = await geocoder.get_addresses(coordinates)
             if result.is_success():
                 response = ReverseGeocodeResponse(success=True, data=result.unwrap())
-                await self.cache.set_final(cache_key, response.data)
+                await self.cache.set_final(cache_key, response.data or [])
                 return response
 
         return ReverseGeocodeResponse(

@@ -45,7 +45,7 @@ class HereReverseGeocoder(ReverseGeocoderBase):
         # Realizar la solicitud HTTP
         result = await self._make_request(self.url, params)
         if result.is_failure():
-            return result
+            return Failure(result.unwrap_err())
 
         try:
             # Procesar los datos de la respuesta

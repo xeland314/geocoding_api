@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from src.models import Coordinates
-from src.responses import GeocodeResponse, ReverseGeocodeResponse, GeocodersResponse
+from src.responses import GeocodeResponse, GeocoderInfo, ReverseGeocodeResponse, GeocodersResponse
 from src.services.cache import CacheManager
 from src.services.geocoders import Geocoder
 from src.services.reversers import GeocoderReverser
@@ -58,7 +58,7 @@ def get_geocoders():
     print(f"Available geocoders: {list(geocoder.geocoders)}")
     return GeocodersResponse(
         geocoders=[
-            {"name": name, "url": geocoder.url}
+            GeocoderInfo(name=name, url=geocoder.url)
             for name, geocoder in geocoder.geocoders.items()
         ]
     )
@@ -76,7 +76,7 @@ def get_reversers():
 
     return GeocodersResponse(
         geocoders=[
-            {"name": name, "url": geocoder.url}
+            GeocoderInfo(name=name, url=geocoder.url)
             for name, geocoder in geocoder_reverser.geocoders.items()
         ]
     )

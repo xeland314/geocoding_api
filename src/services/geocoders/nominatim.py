@@ -43,7 +43,10 @@ class NominatimGeocoder(GeocoderBase):
 
         result = await self._make_request(self.url, params, user_agent=self.user_agent)
         if result.is_failure():
-            return result
+            error_message = getattr(result, "error", None)
+            if error_message is None:
+                error_message = str(result)
+            return Failure(error_message)
 
         try:
             data = result.unwrap()
@@ -52,10 +55,18 @@ class NominatimGeocoder(GeocoderBase):
 
             coordinates_list = []
             for item in data:
+                if not isinstance(item, dict):
+                    continue
+
+                latitude = item.get("lat")
+                longitude = item.get("lon")
+                if latitude is None or longitude is None:
+                    continue
+
                 coordinates_list.append(
                     Coordinates(
-                        latitude=float(item.get("lat")),
-                        longitude=float(item.get("lon")),
+                        latitude=float(latitude),
+                        longitude=float(longitude),
                     )
                 )
 

@@ -1,0 +1,39 @@
+{
+  "cache": {
+    "use_redis": false,
+    "redis_url": "redis://localhost:6379",
+    "sqlite_db_path": "geocoding_cache.db"
+  },
+  "geocoders": {
+    "NOMINATIM_REPLICA_1": {
+      "enabled": true,
+      "url": "http://127.0.0.1:8088/search",
+      "user_agent": "MyGeocoderApp/1.0 (email@example.com)"
+    },
+    "NOMINATIM": {
+      "enabled": false,
+      "url": "https://nominatim.openstreetmap.org/search",
+      "user_agent": "MyGeocoderApp/1.0 (email@example.com)"
+    }
+  },
+  "reversers": {
+    "GEOAPIFY": {
+      "enabled": true,
+      "api_key": ""
+    },
+    "HERE": {
+      "enabled": true,
+      "api_key": ""
+    },
+    "NOMINATIM_REPLICA_1": {
+      "enabled": true,
+      "url": "http://127.0.0.1:8088/reverse",
+      "user_agent": "MyGeocoderApp/1.0 (email@example.com)"
+    },
+    "NOMINATIM": {
+      "enabled": false,
+      "url": "https://nominatim.openstreetmap.org/reverse",
+      "user_agent": "MyGeocoderApp/1.0 (email@example.com)"
+    }
+  }
+}
